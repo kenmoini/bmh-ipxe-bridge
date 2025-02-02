@@ -126,9 +126,28 @@ def processInfraEnv():
         for bmh in infraenvBMHs['items']:
             infraEnvs[infraEnvName]['hosts'][bmh['metadata']['name']] = {}
             infraEnvs[infraEnvName]['hosts'][bmh['metadata']['name']]['bootMACAddress'] = bmh['spec']['bootMACAddress']
-            ieScript += "iseq ${net0/mac} " + bmh['spec']['bootMACAddress'] + " && goto " + safeName + "\n"
-        
+            ieScript += "iseq ${net0/mac} " + bmh['spec']['bootMACAddress'] + " && goto " + safeName + " ||\n"
+
         ipxeScriptBody['data'] += ieScript
+    # Set the default boot target
+
+    defaultInfraEnv = api.list_cluster_custom_object(
+        group="agent-install.openshift.io",
+        version="v1beta1",
+        namespace="",
+        name="",
+        plural="infraenvs",
+        label_selector="pxe-bridge-default.infraenvs.agent-install.openshift.io=true"
+    )
+    if len(defaultInfraEnv['items']) > 0:
+        defaultInfraEnvName = defaultInfraEnv['items'][0]['metadata']['name']
+        pattern = re.compile('[\W_]+')
+        safeName = pattern.sub('', defaultInfraEnvName)
+        ipxeScriptBody['data'] += "goto " + safeName + "\n"
+    else:
+        pattern = re.compile('[\W_]+')
+        safeName = pattern.sub('', list(infraEnvs.keys())[0])
+        ipxeScriptBody['data'] += "goto " + safeName + "\n"
 
 
 # Run the processInfraEnv function in the background every 90 seconds
