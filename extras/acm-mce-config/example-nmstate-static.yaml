@@ -1,0 +1,40 @@
+---
+apiVersion: agent-install.openshift.io/v1beta1
+kind: NMStateConfig
+metadata:
+  name: hcp-pxe-host1
+  #namespace: hcp-pxe
+  labels:
+    agent-install.openshift.io/bmh: hcp-pxe-host1
+    infraenvs.agent-install.openshift.io: hcp-pxe
+spec:
+  config:
+    interfaces:
+
+      - name: eno1
+        type: ethernet
+        state: up
+        ipv4:
+          address:
+            - ip: 192.168.60.140
+              prefix-length: 23
+          dhcp: false
+          enabled: true
+
+    dns-resolver:
+      config:
+        search:
+        - kemo.labs
+        - kemo.network
+        server:
+        - 192.168.42.11
+    routes:
+      config:
+        - destination: 0.0.0.0/0
+          metric: 200
+          next-hop-address: 192.168.60.1
+          next-hop-interface: eno1
+          table-id: 254
+  interfaces:
+    - name: eno1
+      macAddress: 52:54:00:61:a1:76

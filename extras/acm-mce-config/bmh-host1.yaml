@@ -1,0 +1,19 @@
+---
+apiVersion: metal3.io/v1alpha1
+kind: BareMetalHost
+metadata:
+  name: hcp-pxe-host1
+  #namespace: hcp-pxe
+  labels:
+    infraenvs.agent-install.openshift.io: hcp-pxe
+    tenant-id: tenant2
+  annotations:
+    inspect.metal3.io: disabled
+    bmac.agent-install.openshift.io/hostname: host1
+spec:
+  automatedCleaningMode: disabled
+  # This is the MAC address of the NIC that will be used to PXE boot the host
+  bootMACAddress: 52:54:00:61:a1:76
+  online: true
+  rootDeviceHints:
+    deviceName: /dev/vda
