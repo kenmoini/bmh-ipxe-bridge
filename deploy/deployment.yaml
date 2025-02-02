@@ -25,6 +25,8 @@ spec:
           imagePullPolicy: Always
           image: quay.io/kenmoini/bmh-ipxe-bridge:latest
           env:
+            - name: LOOP_TIMING
+              value: "30"
             - name: FLASK_URI
               value: http://bmh-ipxe-bridge-multicluster-engine.apps.endurance-sno.d70.lab.kemo.network
           resources:
