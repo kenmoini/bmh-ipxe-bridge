@@ -16,11 +16,13 @@ WORKDIR /opt/app-root/src
 COPY ./container_root /
 
 RUN dnf update -y \
- && dnf install -y python3 python3-pip openssl \
+ && dnf group install -y "Development Tools" \
+ && dnf install -y python3 python3-pip openssl syslinux-devel genisoimage mtools xz-devel git \
  && dnf clean all \
  && rm -rf /var/cache/yum \
  && pip3 install -r /opt/app-root/src/requirements.txt \ 
- && chmod a+x /opt/app-root/start.sh
+ && chmod a+x /opt/app-root/start.sh \
+ && git clone https://github.com/ipxe/ipxe.git
 
 USER 1001
 

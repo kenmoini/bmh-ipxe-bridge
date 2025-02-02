@@ -23,6 +23,8 @@ tlsKey = os.environ.get("FLASK_TLS_KEY", "")
 protocol = "http" if tlsCert == "" and tlsKey == "" else "https"
 flaskURI = os.environ.get("FLASK_URI", protocol + "://" + flaskHost + ":" + str(flaskPort))
 
+kubernetesServiceAddress = os.environ.get("KUBERNETES_SERVICE_HOST", "")
+
 ##############################
 # Setup General Variables
 loopTiming = os.environ.get("LOOP_TIMING", 90)
@@ -60,8 +62,10 @@ def processInfraEnv():
 
     clearGlobalVars()
 
-    # Configs can be set in Configuration class directly or using helper utility
-    config.load_kube_config()
+    if kubernetesServiceAddress != "":
+        config.load_incluster_config()
+    else:
+        config.load_kube_config()
 
     api = client.CustomObjectsApi()
 

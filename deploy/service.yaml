@@ -1,0 +1,17 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bmh-ipxe-bridge
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+  labels:
+    app: bmh-ipxe-bridge
+spec:
+  selector:
+    app: bmh-ipxe-bridge
+  ports:
+    - protocol: TCP
+      port: 9876
+      targetPort: 9876
+      name: api

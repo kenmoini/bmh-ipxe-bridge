@@ -1,0 +1,40 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bmh-ipxe-bridge
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+  labels:
+    app: bmh-ipxe-bridge
+spec:
+  strategy:
+    type: Recreate
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bmh-ipxe-bridge
+  template:
+    metadata:
+      labels:
+        app: bmh-ipxe-bridge
+    spec:
+      serviceAccountName: bmh-ipxe-bridge
+      containers:
+        - name: bmh-ipxe-bridge
+          imagePullPolicy: Always
+          image: quay.io/kenmoini/bmh-ipxe-bridge:main
+          env:
+            - name: FLASK_URI
+              value: http://bmh-ipxe-bridge-multicluster-engine.apps.endurance-sno.d70.lab.kemo.network
+          resources:
+            limits:
+              cpu: 250m
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          ports:
+            - containerPort: 9876
+              protocol: TCP
+              name: api

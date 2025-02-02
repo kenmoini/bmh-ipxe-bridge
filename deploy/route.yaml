@@ -1,0 +1,20 @@
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "15"
+  labels:
+    app: bmh-ipxe-bridge
+  name: bmh-ipxe-bridge
+spec:
+  to:
+    kind: Service
+    name: bmh-ipxe-bridge
+    weight: 100
+  port:
+    targetPort: api
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Allow
+  wildcardPolicy: None
