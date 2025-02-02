@@ -137,10 +137,11 @@ def processInfraEnv():
             label_selector="infraenvs.agent-install.openshift.io=" + infraEnvName
         )
         for bmh in infraenvBMHs['items']:
+            bmhMAC = bmh['spec']['bootMACAddress']
             infraEnvs[infraEnvName]['hosts'][bmh['metadata']['name']] = {}
-            infraEnvs[infraEnvName]['hosts'][bmh['metadata']['name']]['bootMACAddress'] = bmh['spec']['bootMACAddress']
-            macPointers['data'] += "iseq ${net0/mac} " + bmh['spec']['bootMACAddress'] + " && goto " + safeName + " ||\n"
-            ipxeScriptBody['mac_scripts'][bmh['spec']['bootMACAddress']] = macScript
+            infraEnvs[infraEnvName]['hosts'][bmh['metadata']['name']]['bootMACAddress'] = bmhMAC
+            macPointers['data'] += "iseq ${net0/mac} " + bmhMAC + " && goto " + safeName + " ||\n"
+            ipxeScriptBody['mac_scripts'][bmhMAC.lower()] = macScript
 
         ipxeScriptBody['data'] += ieScript
     # Set the default boot target
