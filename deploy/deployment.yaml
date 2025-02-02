@@ -23,7 +23,7 @@ spec:
       containers:
         - name: bmh-ipxe-bridge
           imagePullPolicy: Always
-          image: quay.io/kenmoini/bmh-ipxe-bridge:main
+          image: quay.io/kenmoini/bmh-ipxe-bridge:latest
           env:
             - name: FLASK_URI
               value: http://bmh-ipxe-bridge-multicluster-engine.apps.endurance-sno.d70.lab.kemo.network
