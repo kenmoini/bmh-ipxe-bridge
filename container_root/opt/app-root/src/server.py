@@ -48,6 +48,7 @@ def index():
     return "Blue pxe styx taste best!"
 
 infraEnvs = {}
+infraEnvsByMac = {}
 ipxeScriptBody = {}
 macPointers = {}
 macPointers['data'] = ""
@@ -56,9 +57,11 @@ ipxeScriptBody['mac_scripts'] = {}
 
 def clearGlobalVars():
     global infraEnvs
+    global infraEnvsByMac
     global ipxeScriptBody
     global macPointers
     infraEnvs = {}
+    infraEnvsByMac = {}
     ipxeScriptBody = {}
     macPointers = {}
     macPointers['data'] = ""
@@ -141,6 +144,7 @@ def processInfraEnv():
             infraEnvs[infraEnvName]['hosts'][bmh['metadata']['name']] = {}
             infraEnvs[infraEnvName]['hosts'][bmh['metadata']['name']]['bootMACAddress'] = bmhMAC
             macPointers['data'] += "iseq ${net0/mac} " + bmhMAC + " && goto " + safeName + " ||\n"
+            infraEnvsByMac[bmhMAC.lower()] = infraEnvName
             ipxeScriptBody['mac_scripts'][bmhMAC.lower()] = macScript
 
         ipxeScriptBody['data'] += ieScript
@@ -189,6 +193,16 @@ def ipxeMACBootRoute(mac):
         # Normalize the MAC address to lowercase
         mac = mac.lower()
         return Response(ipxeScriptBody['mac_scripts'][mac], mimetype='text/plain')
+    
+@app.route('/ipxe-mac-proxy/<mac>')
+def proxyBootArtifacts(mac):
+    mac = str(mac).lower()
+    infraEnvName = infraEnvsByMac[mac]
+    infraEnv = infraEnvs[infraEnvName]
+    artifactPath = infraEnv['bootArtifacts']['ipxeScript']
+    r = requests.get(artifactPath, stream=True, verify=False)
+    return Response(r.iter_content(chunk_size=10*1024),
+                    content_type=r.headers['Content-Type'])
 
 @app.route("/ipxe-boot", methods = ['GET'])
 def ipxeBootRoute():
