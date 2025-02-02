@@ -154,7 +154,7 @@ An example of pointing to an IP, eg running the Python script or container:
 #!ipxe
 
 dhcp
-chain http://192.168.42.42:9876/ipxe-boot
+chain http://192.168.42.42:9876/ipxe-mac-boot/${net0/mac}
 ```
 
 An example of it running in OpenShift:
@@ -163,7 +163,7 @@ An example of it running in OpenShift:
 #!ipxe
 
 dhcp
-chain http://bmh-ipxe-bridge-multicluster-engine.apps.endurance-sno.d70.lab.kemo.network/ipxe-boot
+chain http://bmh-ipxe-bridge-multicluster-engine.apps.endurance-sno.d70.lab.kemo.network/ipxe-mac-boot/${net0/mac}
 ```
 
 Once reconfigured, re-run the image generation command - it will compile much faster this time.

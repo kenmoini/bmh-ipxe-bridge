@@ -89,7 +89,7 @@ def processInfraEnv():
     # Loop through infraenvs
     for infraenv in allInfraEnvs['items']:
         ieScript = ""
-        macScript = ""
+        macScript = "#!ipxe\n\ndhcp\n\n"
 
         infraenvConditions = infraenv['status']['conditions']
         infraenvCondition = next((item for item in infraenvConditions if item["type"] == "ImageCreated"), None)
