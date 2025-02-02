@@ -16,7 +16,7 @@ WORKDIR /opt/app-root/src
 COPY ./container_root /
 
 RUN dnf update -y \
- && dnf group install -y "Development Tools" \
+ && dnf group install -y development-tools \
  && dnf install -y python3 python3-pip openssl syslinux-devel genisoimage mtools xz-devel git \
  && dnf clean all \
  && rm -rf /var/cache/yum \
