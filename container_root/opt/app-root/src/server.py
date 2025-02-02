@@ -195,7 +195,7 @@ def ipxeMACBootRoute(mac):
         return Response(ipxeScriptBody['mac_scripts'][mac], mimetype='text/plain')
     
 @app.route('/ipxe-mac-proxy/<mac>')
-def proxyBootArtifacts(mac):
+def proxyBootIPXEScript(mac):
     mac = str(mac).lower()
     infraEnvName = infraEnvsByMac[mac]
     infraEnv = infraEnvs[infraEnvName]
