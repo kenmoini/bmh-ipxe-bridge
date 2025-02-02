@@ -52,6 +52,7 @@ ipxeScriptBody = {}
 macPointers = {}
 macPointers['data'] = ""
 ipxeScriptBody['data'] = "#!ipxe\n\ndhcp\n\n"
+ipxeScriptBody['mac_scripts'] = {}
 
 def clearGlobalVars():
     global infraEnvs
@@ -62,6 +63,7 @@ def clearGlobalVars():
     macPointers = {}
     macPointers['data'] = ""
     ipxeScriptBody['data'] = "#!ipxe\n\ndhcp\n\n"
+    ipxeScriptBody['mac_scripts'] = {}
 
 def processInfraEnv():
 
@@ -87,6 +89,7 @@ def processInfraEnv():
     # Loop through infraenvs
     for infraenv in allInfraEnvs['items']:
         ieScript = ""
+        macScript = ""
 
         infraenvConditions = infraenv['status']['conditions']
         infraenvCondition = next((item for item in infraenvConditions if item["type"] == "ImageCreated"), None)
@@ -117,8 +120,11 @@ def processInfraEnv():
 
         ieScript += ":" + safeName + "\n"
         ieScript += "initrd --name initrd " + str(flaskURI) + "/boot-artifacts/initrd/" + infraEnvName + "\n"
+        macScript += "initrd --name initrd " + str(flaskURI) + "/boot-artifacts/initrd/" + infraEnvName + "\n"
         ieScript += "kernel " + str(flaskURI) + "/boot-artifacts/kernel/" + infraEnvName + " initrd=initrd coreos.live.rootfs_url=" + str(flaskURI) + "/boot-artifacts/rootfs/" + infraEnvName + ipxeKernelSuffix + "\n"
+        macScript += "kernel " + str(flaskURI) + "/boot-artifacts/kernel/" + infraEnvName + " initrd=initrd coreos.live.rootfs_url=" + str(flaskURI) + "/boot-artifacts/rootfs/" + infraEnvName + ipxeKernelSuffix + "\n"
         ieScript += "boot\n"
+        macScript += "boot\n"
         ieScript += "\n"
 
         infraEnvs[infraEnvName]['hosts'] = {}
@@ -134,6 +140,7 @@ def processInfraEnv():
             infraEnvs[infraEnvName]['hosts'][bmh['metadata']['name']] = {}
             infraEnvs[infraEnvName]['hosts'][bmh['metadata']['name']]['bootMACAddress'] = bmh['spec']['bootMACAddress']
             macPointers['data'] += "iseq ${net0/mac} " + bmh['spec']['bootMACAddress'] + " && goto " + safeName + " ||\n"
+            ipxeScriptBody['mac_scripts'][bmh['spec']['bootMACAddress']] = macScript
 
         ipxeScriptBody['data'] += ieScript
     # Set the default boot target
@@ -175,10 +182,17 @@ def proxyBootArtifacts(arttype, name):
     return Response(r.iter_content(chunk_size=10*1024),
                     content_type=r.headers['Content-Type'])
 
-@app.route("/ipxe-boot", methods = ['GET'])
-def ipxeBootRoute():
+@app.route("/ipxe-mac-boot/<mac>", methods = ['GET'])
+def ipxeMACBootRoute(mac):
     if request.method == 'GET':
-        return ipxeScriptBody['data']
+        # Normalize the MAC address to lowercase
+        mac = mac.lower()
+        return Response(ipxeScriptBody['mac_scripts'][mac], mimetype='text/plain')
+
+@app.route("/ipxe-boot", methods = ['GET'])
+def ipxeBootRoute(mac):
+    if request.method == 'GET':
+        return Response(ipxeScriptBody['data'], mimetype='text/plain')
 
 @app.route("/inventory", methods = ['GET'])
 def inventoryRoute():
