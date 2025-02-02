@@ -17,7 +17,7 @@ COPY ./container_root /
 
 RUN dnf update -y \
  && dnf group install -y development-tools \
- && dnf install -y python3 python3-pip openssl syslinux-devel genisoimage mtools xz-devel git \
+ && dnf install -y python3 python3-pip openssl syslinux-devel genisoimage mtools xz-devel git --skip-unavailable \
  && dnf clean all \
  && rm -rf /var/cache/yum \
  && pip3 install -r /opt/app-root/src/requirements.txt \ 
