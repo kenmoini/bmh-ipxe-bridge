@@ -1,0 +1,4 @@
+kubernetes
+Flask
+flask_cors
+requests
