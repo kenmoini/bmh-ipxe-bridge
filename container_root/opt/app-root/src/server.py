@@ -191,7 +191,7 @@ def ipxeMACBootRoute(mac):
         return Response(ipxeScriptBody['mac_scripts'][mac], mimetype='text/plain')
 
 @app.route("/ipxe-boot", methods = ['GET'])
-def ipxeBootRoute(mac):
+def ipxeBootRoute():
     if request.method == 'GET':
         return Response(ipxeScriptBody['data'], mimetype='text/plain')
 
