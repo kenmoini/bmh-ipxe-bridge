@@ -98,7 +98,8 @@ oc apply -k deploy/
 
 - `/` - Index, just gives some text output
 - `/healthz` - Kubernetes health check endpoint - probably could be better
-- `/ipxe-boot` - Dynamically generated iPXE script
+- `/ipxe-boot` - Dynamically generated iPXE script for all InfraEnvs/BMHs.  Kinda works, mostly doesn't.
+- `/ipxe-mac-boot/<mac_address>` - Dynamically generated iPXE script per MAC address - this works.
 - `/inventory` - Raw JSON output of the discovered and mapped assets
 - `/boot-artifacts/<artifactType>/<name>` - Proxy for InfraEnv bootArtifacts. `artifactType` can be either `kernel`, `initrd`, `rootfs`, or `ipxeScript`.  `name` is the name of the InfraEnv to proxy the artifact from.
 
