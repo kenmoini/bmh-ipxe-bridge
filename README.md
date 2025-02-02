@@ -278,3 +278,13 @@ EOF
 # Enable and start the service
 systemctl enable --now dhcpd
 ```
+
+## Common Issues
+
+### Access Denied/Unsigned/Missing Keys
+
+If you get a response via DHCP, but your system is giving some error about "Access Denied" or "Unsigned image" or "Missing keys" or something of the sort then it's likely that you have Secure Boot enabled.  An example of what this looks like with a Libvirt/KVM VM using the UEFI Tianocore Secure Boot loader is below:
+
+![Secure boot error on Libvirt](./extras/assets/secure-boot-error.jpg)
+
+When building your own custom PXE boot image, you are not signing it with a Certificate Authority in the trust bundle stored in your BIOS.  This unsigned binary will not boot when Secure Boot is enabled.  **Disable Secure Boot to proceed.**
