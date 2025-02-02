@@ -40,6 +40,11 @@ So to meet our goal we have to do a few things
 # Install the needed python packages - maybe do this via a venv is you like
 python3 -m pip install -r container_root/opt/app-root/src/requirements.txt
 
+# Venv example
+python3 -m venv venv
+source venv/bin/activate
+python3 -m pip install -r container_root/opt/app-root/src/requirements.txt
+
 # Set the URI for the proxy service - this is used in the iPXE script for hosts to boot from
 # If this is a hostname, make sure your DHCP server provides a DNS server
 export FLASK_URI="http://hostname-or-ip:port"
@@ -49,6 +54,9 @@ oc login ...
 
 # Run the script
 python3 container_root/opt/app-root/src/server.py
+
+# Exit the venv
+deactivate
 ```
 
 ## Deployment - Container

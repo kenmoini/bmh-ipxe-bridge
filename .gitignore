@@ -1,1 +1,3 @@
 extras/acm-mce-config/pull-secret.yaml
+venv/
+venv/**

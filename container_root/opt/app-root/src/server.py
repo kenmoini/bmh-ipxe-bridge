@@ -49,18 +49,25 @@ def index():
 
 infraEnvs = {}
 ipxeScriptBody = {}
+macPointers = {}
+macPointers['data'] = ""
 ipxeScriptBody['data'] = "#!ipxe\n\ndhcp\n\n"
 
 def clearGlobalVars():
     global infraEnvs
     global ipxeScriptBody
+    global macPointers
     infraEnvs = {}
     ipxeScriptBody = {}
+    macPointers = {}
+    macPointers['data'] = ""
     ipxeScriptBody['data'] = "#!ipxe\n\ndhcp\n\n"
 
 def processInfraEnv():
 
     clearGlobalVars()
+
+    ipxeScriptBody['data'] += "echo IP configuration:\nroute\necho ${net0/mac}\n\n"
 
     if kubernetesServiceAddress != "":
         config.load_incluster_config()
@@ -126,7 +133,7 @@ def processInfraEnv():
         for bmh in infraenvBMHs['items']:
             infraEnvs[infraEnvName]['hosts'][bmh['metadata']['name']] = {}
             infraEnvs[infraEnvName]['hosts'][bmh['metadata']['name']]['bootMACAddress'] = bmh['spec']['bootMACAddress']
-            ieScript += "iseq ${net0/mac} " + bmh['spec']['bootMACAddress'] + " && goto " + safeName + " ||\n"
+            macPointers['data'] += "iseq ${net0/mac} " + bmh['spec']['bootMACAddress'] + " && goto " + safeName + " ||\n"
 
         ipxeScriptBody['data'] += ieScript
     # Set the default boot target
@@ -134,8 +141,6 @@ def processInfraEnv():
     defaultInfraEnv = api.list_cluster_custom_object(
         group="agent-install.openshift.io",
         version="v1beta1",
-        namespace="",
-        name="",
         plural="infraenvs",
         label_selector="pxe-bridge-default.infraenvs.agent-install.openshift.io=true"
     )
@@ -143,11 +148,13 @@ def processInfraEnv():
         defaultInfraEnvName = defaultInfraEnv['items'][0]['metadata']['name']
         pattern = re.compile('[\W_]+')
         safeName = pattern.sub('', defaultInfraEnvName)
-        ipxeScriptBody['data'] += "goto " + safeName + "\n"
+        macPointers['data'] += "goto " + safeName + "\n"
     else:
         pattern = re.compile('[\W_]+')
         safeName = pattern.sub('', list(infraEnvs.keys())[0])
-        ipxeScriptBody['data'] += "goto " + safeName + "\n"
+        macPointers['data'] += "goto " + safeName + "\n"
+
+    ipxeScriptBody['data'] += macPointers['data']
 
 
 # Run the processInfraEnv function in the background every 90 seconds
