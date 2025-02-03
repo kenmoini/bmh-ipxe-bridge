@@ -112,6 +112,7 @@ oc apply -k deploy/
 - `FLASK_TLS_CERT` - Optional, SSL/TLS certificate to use
 - `FLASK_TLS_KEY` - Optional, SSL/TLS key to use
 - `LOOP_TIMING` - Default `90` (seconds), time in between queries to the cluster and rebuilds of the InfraEnv/BMH mapped inventory and generated iPXE script.
+- `ADDITIONAL_HOST_CONFIG_PATH` - Default "", path where additional iPXE host configuration is stored.
 
 ---
 
@@ -288,6 +289,12 @@ EOF
 # Enable and start the service
 systemctl enable --now dhcpd
 ```
+
+## Additional Host Configuration
+
+In case you want to use this service to boot systems that are not defined in ACM/MCE/BMH/InfraEnv/etc, you can create a file with the filename being a hyphen delimited MAC address, containing the iPXE script you want that system to boot.  An example is in the [additional-host-configs](./additional-host-configs/) folder.
+
+Then provide it to the service by defining the `ADDITIONAL_HOST_CONFIG_PATH` environmental variable pointing to the path containing those files.
 
 ## Common Issues
 

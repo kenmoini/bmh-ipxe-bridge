@@ -28,6 +28,13 @@ kubernetesServiceAddress = os.environ.get("KUBERNETES_SERVICE_HOST", "")
 ##############################
 # Setup General Variables
 loopTiming = os.environ.get("LOOP_TIMING", 90)
+additionalHostConfigPath = os.environ.get("ADDITIONAL_HOST_CONFIG_PATH", "")
+
+defaultiPXEBootScript = """#!ipxe
+
+dhcp
+shell
+"""
 
 ##############################
 # creates a Flask application
@@ -68,9 +75,36 @@ def clearGlobalVars():
     ipxeScriptBody['data'] = "#!ipxe\n\ndhcp\n\n"
     ipxeScriptBody['mac_scripts'] = {}
 
+def loadAdditionalHostConfig():
+    if additionalHostConfigPath != "":
+        try:
+            # Çheck to make sure the path exists and is a directory
+            if os.path.isdir(additionalHostConfigPath):
+                # Load a list of all the files in the path
+                files = os.listdir(additionalHostConfigPath)
+                for file in files:
+                    # Convert the filename to a proper MAC address
+                    mac = file.replace("-", ":").lower()
+                    with open(additionalHostConfigPath + "/" + file, 'r') as f:
+                        data = f.read()
+                        ipxeScriptBody['mac_scripts'][mac] = data
+                        f.close()
+            else:
+                print("Error loading additional host config: Path is not a directory")
+                return ""
+        except Exception as e:
+            print("Error loading additional host config: " + str(e))
+            return ""
+
 def processInfraEnv():
 
     clearGlobalVars()
+
+    # Any additional per-host MAC-based config will be applied here
+    # Then if the same MAC is defined in a BMH, the BMH/InfraEnv config will override
+    # If there is a default InfraEnv, it will be set as the default boot target
+    # If all else fails, an iPXE prompt will be displayed
+    loadAdditionalHostConfig()
 
     ipxeScriptBody['data'] += "echo IP configuration:\nroute\necho ${net0/mac}\n\n"
 
@@ -187,22 +221,44 @@ def proxyBootArtifacts(arttype, name):
     return Response(r.iter_content(chunk_size=10*1024),
                     content_type=r.headers['Content-Type'])
 
+# ipxeMACBootRoute
+# This route will take in a MAC address and return the defined/generated iPXE script for that MAC address
+# If the MAC address is not found, it will return the default iPXE script
 @app.route("/ipxe-mac-boot/<mac>", methods = ['GET'])
 def ipxeMACBootRoute(mac):
     if request.method == 'GET':
         # Normalize the MAC address to lowercase
         mac = mac.lower()
-        return Response(ipxeScriptBody['mac_scripts'][mac], mimetype='text/plain')
-    
+        macScript = ipxeScriptBody['mac_scripts'][mac]
+        if macScript is None:
+            return Response(defaultiPXEBootScript, mimetype='text/plain')
+        else:
+            return Response(macScript, mimetype='text/plain')
+
+# proxyBootIPXEScript
+# This route will take in a MAC address, and look up the associated BMH and the InfraEnv it is a part of
+# It will then return the iPXE script for that InfraEnv directly without modification
+# If the MAC address is not found as a BMH, it will look up for any additional host configs that may be defined
+# If that does not return a result, it will return the default iPXE script
 @app.route('/ipxe-mac-proxy/<mac>')
 def proxyBootIPXEScript(mac):
     mac = str(mac).lower()
+    # Check for the MAC address in the infraEnvsByMac dictionary
     infraEnvName = infraEnvsByMac[mac]
-    infraEnv = infraEnvs[infraEnvName]
-    artifactPath = infraEnv['bootArtifacts']['ipxeScript']
-    r = requests.get(artifactPath, stream=True, verify=False)
-    return Response(r.iter_content(chunk_size=10*1024),
-                    content_type=r.headers['Content-Type'])
+    if infraEnvName is None:
+        # Check to see if the MAC address
+        macScript = ipxeScriptBody['mac_scripts'][mac]
+        if macScript is None:
+            # If there is no MAC specific config found, give the default iPXE script
+            return Response(defaultiPXEBootScript, mimetype='text/plain')
+        else:
+            return Response(macScript, mimetype='text/plain')
+    else:
+      infraEnv = infraEnvs[infraEnvName]
+      artifactPath = infraEnv['bootArtifacts']['ipxeScript']
+      r = requests.get(artifactPath, stream=True, verify=False)
+      return Response(r.iter_content(chunk_size=10*1024),
+                      content_type=r.headers['Content-Type'])
 
 @app.route("/ipxe-boot", methods = ['GET'])
 def ipxeBootRoute():
