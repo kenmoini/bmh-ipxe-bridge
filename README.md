@@ -1,7 +1,7 @@
 # BareMetalHost <> iPXE Bridge
 
 - **Container Image:** quay.io/kenmoini/bmh-ipxe-bridge:latest
-- Kubernetes/OpenShift Deployment: [./deploy/](./deploy/)
+- **Kubernetes/OpenShift Deployment**: [./deploy/](./deploy/)
 
 > **Goal**: To easily boot PXE/iPXE enabled systems automatically based on what is defined as BareMetalHost objects.
 
