@@ -229,11 +229,11 @@ def ipxeMACBootRoute(mac):
     if request.method == 'GET':
         # Normalize the MAC address to lowercase
         mac = mac.lower()
-        macScript = ipxeScriptBody['mac_scripts'][mac]
-        if macScript is None:
-            return Response(defaultiPXEBootScript, mimetype='text/plain')
-        else:
+        macScript = ipxeScriptBody['mac_scripts'].get(mac)
+        if macScript:
             return Response(macScript, mimetype='text/plain')
+        else:
+            return Response(defaultiPXEBootScript, mimetype='text/plain')
 
 # proxyBootIPXEScript
 # This route will take in a MAC address, and look up the associated BMH and the InfraEnv it is a part of
@@ -244,21 +244,21 @@ def ipxeMACBootRoute(mac):
 def proxyBootIPXEScript(mac):
     mac = str(mac).lower()
     # Check for the MAC address in the infraEnvsByMac dictionary
-    infraEnvName = infraEnvsByMac[mac]
-    if infraEnvName is None:
+    infraEnvName = infraEnvsByMac.get(mac)
+    if infraEnvName:
+        infraEnv = infraEnvs[infraEnvName]
+        artifactPath = infraEnv['bootArtifacts']['ipxeScript']
+        r = requests.get(artifactPath, stream=True, verify=False)
+        return Response(r.iter_content(chunk_size=10*1024),
+                      content_type=r.headers['Content-Type'])
+    else:
         # Check to see if the MAC address
-        macScript = ipxeScriptBody['mac_scripts'][mac]
-        if macScript is None:
+        macScript = ipxeScriptBody['mac_scripts'].get(mac)
+        if macScript:
+            return Response(macScript, mimetype='text/plain')
+        else:
             # If there is no MAC specific config found, give the default iPXE script
             return Response(defaultiPXEBootScript, mimetype='text/plain')
-        else:
-            return Response(macScript, mimetype='text/plain')
-    else:
-      infraEnv = infraEnvs[infraEnvName]
-      artifactPath = infraEnv['bootArtifacts']['ipxeScript']
-      r = requests.get(artifactPath, stream=True, verify=False)
-      return Response(r.iter_content(chunk_size=10*1024),
-                      content_type=r.headers['Content-Type'])
 
 @app.route("/ipxe-boot", methods = ['GET'])
 def ipxeBootRoute():
